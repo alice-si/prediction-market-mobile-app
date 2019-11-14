@@ -32,12 +32,10 @@ export default function HomeScreen() {
 
   useEffect(() => {
     Blockchain.getWallet().then(function(wallet) {
-      console.log('Got wallet');
       setWallet(wallet);
     });
 
     Blockchain.getBalance().then(function(balance) {
-      console.log('Got balance');
       setBalance(balance);
     });
   }, []); // It is important to pass [], more info here https://css-tricks.com/run-useeffect-only-once/
@@ -71,6 +69,7 @@ export default function HomeScreen() {
           source={require('../assets/images/alice-si.jpg')}
           style={styles.welcomeImage}
         />
+
       </View>
 
       <ScrollView

@@ -5,7 +5,7 @@ function sleep(ms) {
 }
 
 async function getMarkets() {
-  await sleep(500);
+  await sleep(50);
   return [
     {
       project: 'Help prevent young people’s homelessness – one step at a time!',
@@ -45,28 +45,35 @@ async function getWallet() {
 }
 
 async function getBalance() {
-  await sleep(1000);
+  await sleep(100);
   return 8.43;
 }
 
 async function listenOnPriceChanges(mmAddress, onChange) {
-  for (let i = 1; i < 5; i++) {
+  for (let i = 1; i < 7; i++) {
     onChange({
-      priceBuyYes: 0.51 + (i / 20),
+      priceBuyYes: 0.51 + (i / 20) - Math.random() * 0.5,
       priceSellYes: 0.50 + (i / 20),
       priceBuyNo: 0.48 + (i / 20),
       priceSellNo: 0.47 + (i / 20),
       timestamp: Date.now() - 10000 * i,
     });
-    await sleep(2000);
+    await sleep(50);
   }
-};
+}
+
+async function trade(address, type) {
+  await sleep(5000);
+  return 'OK';
+}
 
 export default {
   getMarkets,
 
   getWallet,
   getBalance,
+
+  trade,
 
   listenOnPriceChanges,
 };
