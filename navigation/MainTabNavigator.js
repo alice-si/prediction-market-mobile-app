@@ -4,6 +4,7 @@ import { createStackNavigator, createBottomTabNavigator } from 'react-navigation
 
 import TabBarIcon from '../components/TabBarIcon';
 import HomeScreen from '../screens/HomeScreen';
+import MarketScreen from '../screens/MarketScreen';
 import MarketsScreen from '../screens/MarketsScreen';
 
 import Colors from '../constants/Colors';
@@ -39,7 +40,14 @@ HomeStack.path = '';
 
 const MarketsStack = createStackNavigator(
   {
-    Markets: MarketsScreen,
+    Markets: {
+      screen: MarketsScreen,
+      path: 'Markets',
+    },
+    Market: {
+      screen: MarketScreen,
+      path: 'Market',
+    },
   },
   config
 );
@@ -51,8 +59,7 @@ MarketsStack.navigationOptions = {
   ),
 };
 
-
-MarketsStack.path = '';
+// MarketsStack.path = '';
 
 const tabNavigator = createBottomTabNavigator({
   HomeStack,

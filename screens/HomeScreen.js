@@ -1,5 +1,5 @@
 import * as WebBrowser from 'expo-web-browser';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Image,
   Platform,
@@ -7,18 +7,61 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  ActivityIndicator,
   View,
   Clipboard,
+  Alert,
 
 } from 'react-native';
-import { Avatar, Button, Card, Title, Paragraph } from 'react-native-paper';
+import { Avatar, Button, Card, Title, Paragraph, Snackbar } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import Blockchain from '../modules/blockchain';
 
 import { MonoText } from '../components/StyledText';
 
+const NOTIFICATION_TIMEOUT = 1000;
+
 export default function HomeScreen() {
+  const [balance, setBalance] = useState('');
+  const [wallet, setWallet] = useState({});
+  const [notificationState, setNotificationState] = useState({
+    visible: false,
+    msg: ''
+  });
+
+  useEffect(() => {
+    Blockchain.getWallet().then(function(wallet) {
+      console.log('Got wallet');
+      setWallet(wallet);
+    });
+
+    Blockchain.getBalance().then(function(balance) {
+      console.log('Got balance');
+      setBalance(balance);
+    });
+  }, []); // It is important to pass [], more info here https://css-tricks.com/run-useeffect-only-once/
+
+
+
+  function showNotification(msg) {
+    setNotificationState({
+      visible: true,
+      msg
+    });
+  }
+
+  function hideNotification() {
+    setNotificationState({
+      visible: false,
+    });
+  }
+
+  function copyAddress() {
+    Clipboard.setString(wallet.address);
+    Alert.alert('Wallet address copied to clipboard');
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.welcomeContainer}>
@@ -34,43 +77,45 @@ export default function HomeScreen() {
         style={styles.container}
         contentContainerStyle={styles.contentContainer}>
 
-        {/* <View style={styles.welcomeContainer}>
-          <Text style={styles.welcomeText}>
-            Welcome to prediction market mobile app
-          </Text>
-        </View> */}
+        { balance !== '' ? null : <ActivityIndicator size="large" color="#17a6b0" /> }
 
         <View style={styles.cardsContainer}>
           <Card style={styles.card}>
             <Card.Title title="Balance" subtitle="" left={(props) => <Avatar.Icon {...props} icon="cash" />} />
             <Card.Content>
               <Title>
-              
                 <Text style={{fontSize: 30}}>
-                  10.3{'\u00A0'}{/* Is it nbsp for react native */}
+                  {balance} {'\u00A0'}{/* Is it nbsp for react native */}
                 </Text>
                 <Text style={{fontSize: 15, padding: 30, color: '#666561'}}>
                   DAI
                 </Text>
-                
               </Title>
-              {/* <Paragraph>Card content</Paragraph> */}
             </Card.Content>
-            {/* <Card.Cover source={{ uri: 'https://picsum.photos/700' }} /> */}
             <Card.Actions>
               <Button >Get more</Button>
             </Card.Actions>
           </Card>
 
           <Card style={styles.card}>
-            <Card.Title title="Wallet" subtitle="0x01234567890123456789012345678901" left={(props) => <Avatar.Icon {...props} icon="wallet" />} />
+            <Card.Title title="Wallet" subtitle={wallet.address} left={(props) => <Avatar.Icon {...props} icon="wallet" />} />
             <Card.Actions>
-              <Button>
+              <Button onPress={() => copyAddress()}>
                 Copy address
                 <MaterialIcons name="content-copy" size={15} styles={{marginLeft: 10}} />
               </Button>
             </Card.Actions>
           </Card>
+        </View>
+
+        <View style={styles.notificationContainer}>
+          <Snackbar
+            duration={3}
+            visible={notificationState.visible}
+            onDismiss={hideNotification}
+          >
+            {'notificationState.msg'}
+          </Snackbar>
         </View>
 
       </ScrollView>
@@ -158,5 +203,10 @@ const styles = StyleSheet.create({
   card: {
     margin: 10,
   },
+
+  notificationContainer: {
+    // position: 'absolute',
+    // bottom: 50,
+  }
 
 });

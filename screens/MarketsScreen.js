@@ -1,5 +1,4 @@
-import * as WebBrowser from 'expo-web-browser';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Image,
   Platform,
@@ -10,26 +9,30 @@ import {
   View,
   FlatList,
   Item,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Avatar, Button, Card, Title, Paragraph } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import { NavigationActions } from 'react-navigation';
+import Blockchain from '../modules/blockchain';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
-const DATA = [
-  {
-    id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
-    title: 'First Item',
-  },
-  {
-    id: '3ac68afc-c605-48d3-a4f8-fbd91aa97f63',
-    title: 'Second Item',
-  },
-  {
-    id: '58694a0f-3da1-471f-bd96-145571e29d72',
-    title: 'Third Item',
-  },
-];
+function MarketsScreen({navigation}) {
+  let [markets, setMarkets] = useState([]);
 
-export default function HomeScreen() {
+  useEffect(function() {
+    Blockchain.getMarkets().then(markets => {
+      setMarkets(markets);
+    });
+  });
+
+  function onMarketSelected(market) {
+    navigation.navigate('Market', {
+      address: market.address,
+      outcome: market.outcome,
+    });
+  }
+
   return (
     <View>
       <View>
@@ -40,96 +43,26 @@ export default function HomeScreen() {
 
       <ScrollView style={styles.cardsScrollView}>
         <View style={styles.cardsContainer}>
-          <Card style={styles.marketCard}>
-            <Card.Title title="Card Title" subtitle="Card Subtitle" left={(props) => <Avatar.Text {...props} label="P" />} />
-            {/* <Card.Content>
-              <Title>Card title</Title>
-              <Paragraph>Card content</Paragraph>
-            </Card.Content> */}
-            {/* <Card.Cover source={{ uri: 'https://picsum.photos/700' }} /> */}
-            {/* <Card.Actions>
-              <Button>Cancel</Button>
-              <Button>Ok</Button>
-            </Card.Actions> */}
-          </Card>
-
-          <Card style={styles.marketCard}>
-            <Card.Title title="Buy land and create infrastructure" subtitle="Project: Stop animals from suffering in captivity" left={(props) => <Avatar.Text {...props} label="B" />} />
-            {/* <Card.Content>
-              <Title>Card title</Title>
-              <Paragraph>Card content</Paragraph>
-            </Card.Content> */}
-            {/* <Card.Cover source={{ uri: 'https://picsum.photos/700' }} /> */}
-            {/* <Card.Actions>
-              <Button>Cancel</Button>
-              <Button>Ok</Button>
-            </Card.Actions> */}
-          </Card>
-
-          <Card style={styles.marketCard}>
-            <Card.Title title="Card Title" subtitle="Card Subtitle" left={(props) => <Avatar.Icon {...props} icon="trending-up" />} />
-            {/* <Card.Content>
-              <Title>Card title</Title>
-              <Paragraph>Card content</Paragraph>
-            </Card.Content> */}
-            {/* <Card.Cover source={{ uri: 'https://picsum.photos/700' }} /> */}
-            {/* <Card.Actions>
-              <Button>Cancel</Button>
-              <Button>Ok</Button>
-            </Card.Actions> */}
-          </Card>
-
-          <Card style={styles.marketCard}>
-            <Card.Title title="Card Title" subtitle="Card Subtitle" left={(props) => <Avatar.Icon {...props} icon="trending-up" />} />
-            {/* <Card.Content>
-              <Title>Card title</Title>
-              <Paragraph>Card content</Paragraph>
-            </Card.Content> */}
-            {/* <Card.Cover source={{ uri: 'https://picsum.photos/700' }} /> */}
-            {/* <Card.Actions>
-              <Button>Cancel</Button>
-              <Button>Ok</Button>
-            </Card.Actions> */}
-          </Card>
-
-          <Card style={styles.marketCard}>
-            <Card.Title title="Card Title" subtitle="Card Subtitle" left={(props) => <Avatar.Icon {...props} icon="trending-up" />} />
-            {/* <Card.Content>
-              <Title>Card title</Title>
-              <Paragraph>Card content</Paragraph>
-            </Card.Content> */}
-            {/* <Card.Cover source={{ uri: 'https://picsum.photos/700' }} /> */}
-            {/* <Card.Actions>
-              <Button>Cancel</Button>
-              <Button>Ok</Button>
-            </Card.Actions> */}
-          </Card>
-
-          <Card style={styles.marketCard}>
-            <Card.Title title="Card Title" subtitle="Card Subtitle" left={(props) => <Avatar.Icon {...props} icon="trending-up" />} />
-            {/* <Card.Content>
-              <Title>Card title</Title>
-              <Paragraph>Card content</Paragraph>
-            </Card.Content> */}
-            {/* <Card.Cover source={{ uri: 'https://picsum.photos/700' }} /> */}
-            {/* <Card.Actions>
-              <Button>Cancel</Button>
-              <Button>Ok</Button>
-            </Card.Actions> */}
-          </Card>
-
-          <Card style={styles.marketCard}>
-            <Card.Title title="Card Title" subtitle="Card Subtitle" left={(props) => <Avatar.Icon {...props} icon="trending-up" />} />
-            {/* <Card.Content>
-              <Title>Card title</Title>
-              <Paragraph>Card content</Paragraph>
-            </Card.Content> */}
-            {/* <Card.Cover source={{ uri: 'https://picsum.photos/700' }} /> */}
-            {/* <Card.Actions>
-              <Button>Cancel</Button>
-              <Button>Ok</Button>
-            </Card.Actions> */}
-          </Card>
+          { markets.length == 0 ? <ActivityIndicator size="large" color="#17a6b0" /> : null }
+          {
+            markets.map((market, index) => 
+              <Card onPress={() => onMarketSelected(market)} style={styles.marketCard} key={index}>
+                <Card.Title title={market.outcome} subtitle={market.address} left={(props) => <Avatar.Text {...props} label={market.outcome[0]} />} />
+                {/* <Card.Content> */}
+                  {/* <Title>Card title</Title> */}
+                  {/* <Paragraph>{market.address}</Paragraph> */}
+                {/* </Card.Content> */}
+                {/* <Card.Cover source={{ uri: 'https://picsum.photos/700' }} /> */}
+                {/* <Card.Actions>
+                  <Button>Cancel</Button>
+                  <Button mode="outlined">
+                    Trade
+                    <MaterialIcons name="keyboard-arrow-right" size={15} />
+                  </Button>
+                </Card.Actions> */}
+              </Card>
+            )
+          }
         </View>
       </ScrollView>
 
@@ -137,9 +70,12 @@ export default function HomeScreen() {
   );
 }
 
-HomeScreen.navigationOptions = {
+MarketsScreen.navigationOptions = {
+  // title: 'Markets',
   header: null,
 };
+
+export default MarketsScreen;
 
 const styles = StyleSheet.create({
   header: {

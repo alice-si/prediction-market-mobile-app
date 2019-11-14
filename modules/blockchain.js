@@ -10,16 +10,19 @@ async function getMarkets() {
     {
       project: 'Help prevent young people’s homelessness – one step at a time!',
       outcome: 'Financial housing support',
+      address: '0x9038156f749D5cFd5a89E0E5Ac16808583E8594f',
     },
     {
       project: 'Help prevent young people’s homelessness – one step at a time!',
       outcome: 'Make a house a home',
+      address: '0x9038156f749D5cFd5a89E0E5Ac16808583E8594f',
     },
     {
       project: 'Stop animals from suffering in captivity',
       outcome: 'Buy land and create infrastructure',
+      address: '0x9038156f749D5cFd5a89E0E5Ac16808583E8594f',
     }
-  ]
+  ];
 }
 
 // TODO implement using ethers.Wallet.createRandom
@@ -35,7 +38,10 @@ async function getWallet() {
     await localStorage.savePrivateKey(privateKey);
   }
   // Connect ethers.js and return ethers wallet
-  return 'TODO';
+  // return 'TODO';
+  return {
+    address: privateKey,
+  };
 }
 
 async function getBalance() {
@@ -43,7 +49,6 @@ async function getBalance() {
   return 8.43;
 }
 
-// TODO implement
 async function listenOnPriceChanges(mmAddress, onChange) {
   for (let i = 1; i < 5; i++) {
     onChange({
@@ -51,7 +56,7 @@ async function listenOnPriceChanges(mmAddress, onChange) {
       priceSellYes: 0.50 + (i / 20),
       priceBuyNo: 0.48 + (i / 20),
       priceSellNo: 0.47 + (i / 20),
-      timestamp: Date.now(),
+      timestamp: Date.now() - 10000 * i,
     });
     await sleep(2000);
   }

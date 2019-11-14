@@ -16,7 +16,7 @@ async function savePrivateKey(privateKey) {
   if (alreadySaved) {
     throw 'Private key should be saved only one time';
   }
-  await setItem(PRIVATE_KEY_KEY, privateKey);
+  await AsyncStorage.setItem(PRIVATE_KEY_KEY, privateKey);
 }
 
 export default {

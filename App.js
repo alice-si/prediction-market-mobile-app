@@ -13,7 +13,7 @@ const theme = {
   colors: {
     ...DefaultTheme.colors,
     primary: '#17a6b0',
-    // accent: 'white',
+    accent: 'white',
     // onBackground: 'white',
     // onSurface: 'white',
     // error: 'white',
