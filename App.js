@@ -2,7 +2,7 @@ import { AppLoading } from 'expo';
 import { Asset } from 'expo-asset';
 import * as Font from 'expo-font';
 import React, { useState } from 'react';
-import { Platform, StatusBar, StyleSheet, View } from 'react-native';
+import { Platform, StatusBar, StyleSheet, View, YellowBox } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 
@@ -26,6 +26,8 @@ const theme = {
     // notification: 'white',
   },
 };
+
+YellowBox.ignoreWarnings(['Setting a timer']);
 
 export default function App(props) {
   const [isLoadingComplete, setLoadingComplete] = useState(false);

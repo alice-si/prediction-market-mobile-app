@@ -24,7 +24,7 @@ function MarketsScreen({navigation}) {
     Blockchain.getMarkets().then(markets => {
       setMarkets(markets);
     });
-  });
+  }, []);
 
   function onMarketSelected(market) {
     navigation.navigate('Market', {

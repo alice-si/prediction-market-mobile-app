@@ -13,7 +13,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "splash": {
-      "image": "./assets/images/alice-logo-animated.svg",
+      "image": "./assets/images/alice-si.jpg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

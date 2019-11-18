@@ -39,14 +39,28 @@ export default function MarketScreen({navigation}) {
   const tabs = ['Yes', 'No'];
 
   const [chartData, setChartData] = useState({
-    labels: [1],
-    datasets: [{
-      data: [1],
-    }],
+    Yes: {
+      labels: [1],
+      datasets: [{
+        data: [1],
+      }],
+    },
+    No: {
+      labels: [1],
+      datasets: [{
+        data: [1],
+      }],
+    },
+
   });
   const [selectedTab, setSelectedTab] = useState(0);
   const [action, setAction] = useState('buy');
-  const [actionInProgress, setActioninProgress] = useState(false);
+  const [currentPrices, setCurrentPrices] = useState({
+    Yes: {},
+    No: {},
+  });
+  const [balances, setBalances] = useState({});
+  const [actionInProgress, setActionInProgress] = useState(false);
   const [dialogStatus, setDialogStatus] = useState({
     visible: false
   });
@@ -68,26 +82,48 @@ export default function MarketScreen({navigation}) {
 
   async function confirmAction() {
     // Add args
-    setActioninProgress(true);
+    setActionInProgress(true);
     await Blockchain.trade();
-    setActioninProgress(false);
+    setActionInProgress(false);
     setDialogStatus({visible: false});
     Alert.alert('Transaction sent');
   }
 
   function calcChartData(prices) {
     let result = {
-      labels: [],
-      datasets: [{
-        data: []
-      }],
+      Yes: {
+        labels: [],
+        datasets: [{
+          data: []
+        }],
+      },
+      No: {
+        labels: [],
+        datasets: [{
+          data: []
+        }],
+      }
     };
     for (let price of prices) {
       let date = new Date(price.timestamp);
-      result.labels.push(date.getHours() + ":" + date.getMinutes());
-      result.datasets[0].data.push(price.priceBuyYes);
+      let timeStr = date.getHours() + ":" + date.getMinutes();
+
+      result.Yes.labels.push(timeStr);
+      result.No.labels.push(timeStr);
+      
+      result.Yes.datasets[0].data.push(price.priceBuyYes);
+      result.No.datasets[0].data.push(price.priceBuyNo);
     }
     return result;
+  }
+
+  function updateBalancesAndPrices() {
+    Blockchain.getCurrentPrices(address).then((prices) => {
+      setCurrentPrices(prices);
+    });
+    Blockchain.getBalances(address).then(balances => {
+      setBalances(balances);
+    });
   }
 
   useEffect(() => {
@@ -96,7 +132,9 @@ export default function MarketScreen({navigation}) {
       prices.push(newPriceChange);
       const newChartData = calcChartData(prices);
       setChartData(newChartData);
+      updateBalancesAndPrices();
     });
+    updateBalancesAndPrices();
   }, []); // It is important to pass [] as a second argument
 
   let address = navigation.getParam('address');
@@ -157,13 +195,13 @@ export default function MarketScreen({navigation}) {
 
           {/* Second chart try */}
           <YAxis
-            data={chartData.datasets[0].data}
+            data={chartData[tabs[selectedTab]].datasets[0].data}
             formatLabel={(value) => `${value}`}
             contentInset={{ top: 20, bottom: 20 }}
           />
           <AreaChart
             // style={{ height: 200 }}
-            data={chartData.datasets[0].data}
+            data={chartData[tabs[selectedTab]].datasets[0].data}
             style={{ flex: 1, marginLeft: 16 }}
             svg={{ stroke: '#17a6b0' }}
             contentInset={{ top: 20, bottom: 20 }}
@@ -187,21 +225,27 @@ export default function MarketScreen({navigation}) {
               <DataTable.Cell>
                 <Text style={styles.tableHeader}>You have</Text>
               </DataTable.Cell>
-              <DataTable.Cell numeric>3</DataTable.Cell>
+              <DataTable.Cell numeric>
+                {balances[tabs[selectedTab]] || 'loading...'}
+              </DataTable.Cell>
             </DataTable.Row>
 
             <DataTable.Row>
               <DataTable.Cell>
                 <Text style={styles.tableHeader}>Buy price</Text>
               </DataTable.Cell>
-              <DataTable.Cell numeric>0.53</DataTable.Cell>
+              <DataTable.Cell numeric>
+                {currentPrices[tabs[selectedTab]].Buy || 'loading...'}
+              </DataTable.Cell>
             </DataTable.Row>
 
             <DataTable.Row>
               <DataTable.Cell>
                 <Text style={styles.tableHeader}>Sell price</Text>
               </DataTable.Cell>
-              <DataTable.Cell numeric>0.51</DataTable.Cell>
+              <DataTable.Cell numeric>
+                {currentPrices[tabs[selectedTab]].Sell || 'loading...'}
+              </DataTable.Cell>
             </DataTable.Row>
           </DataTable>
         </View>

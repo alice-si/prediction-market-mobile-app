@@ -87,7 +87,7 @@ export default function HomeScreen() {
                   {balance} {'\u00A0'}{/* Is it nbsp for react native */}
                 </Text>
                 <Text style={{fontSize: 15, padding: 30, color: '#666561'}}>
-                  DAI
+                  tokens
                 </Text>
               </Title>
             </Card.Content>
