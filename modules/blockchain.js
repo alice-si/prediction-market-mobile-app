@@ -1,4 +1,3 @@
-import BlockchainMock from './blockchainMock';
 import localStorage from './localStorage';
 
 import 'ethers/dist/shims.js';
@@ -7,17 +6,22 @@ import { ethers } from 'ethers';
 import ORCHESTRATOR_JSON from '../contracts/SignallingOrchestrator.json';
 import MM_JSON from '../contracts/MarketMaker.json';
 import COLLATERAL_JSON from '../contracts/CollateralToken.json';
+import CONDITIONAL_TOKENS_JSON from '../contracts/ConditionalTokens.json';
 
+// FIXME: set your local ganache address
+const LOCAL_GANACHE_HTTP = 'http://192.168.0.31:8545';
+// FIXME: set your deployed signalling orchestrator address
 const SIGNALLING_ORCHESTRATOR = '0x9699b0b659FBbFf0FC15cE01F98E76dee5880550';
 
 const ONE = ethers.utils.parseEther("1");
 const MIN_ONE = ethers.utils.parseEther("-1");
+const HUNDRED = ethers.utils.parseEther("100");
 
 let contracts = null;
 
 function getProvider() {
   // return new ethers.providers.JsonRpcProvider('http://2dac0d50.ngrok.io');
-  return new ethers.providers.JsonRpcProvider('http://192.168.0.31:8545');
+  return new ethers.providers.JsonRpcProvider(LOCAL_GANACHE_HTTP);
 
   // Connect Infura provider later
 }
@@ -46,6 +50,9 @@ async function initContracts() {
   
   let collateralAddress = await contracts.orchestrator.collateralToken();
   contracts.collateral = new ethers.Contract(collateralAddress, COLLATERAL_JSON.abi, wallet);
+
+  let conditionalTokensAddress = await contracts.orchestrator.conditionalTokens();
+  contracts.conditionalTokens = new ethers.Contract(conditionalTokensAddress, CONDITIONAL_TOKENS_JSON.abi, wallet);
 }
 
 async function getContracts() {
@@ -130,10 +137,46 @@ async function getBalances(mmAddress) {
   return result;
 }
 
-// Uncomment for testing
-// export default BlockchainMock;
+async function trade(mmAddress, type, action) {
+  try {
+    let wallet = await getWallet();
+    let { collateral, conditionalTokens } = await getContracts();
+    let mm = new ethers.Contract(mmAddress, MM_JSON.abi, wallet);
 
-// TODO implement trading
+    let allowance = await collateral.allowance(wallet.address, mmAddress);
+
+    if (allowance == 0) {
+      console.log(`First trading on ${mmAddress}. Joining market...`);
+      let setApprovalForAllTx = await conditionalTokens.setApprovalForAll(mmAddress, true, {gasLimit: 1000000});
+      console.log({setApprovalForAllTx: setApprovalForAllTx.hash});
+      await setApprovalForAllTx.wait();
+      let approveTx = await collateral.approve(mmAddress, HUNDRED, {gasLimit: 1000000});
+      console.log({approveTx: approveTx.hash});
+      await approveTx.wait();
+    }
+    
+    let tokenAmounts = [0, 0];
+    let amount = (action == 'buy') ? ONE : MIN_ONE;
+    if (type == 'Yes') {
+      tokenAmounts[0] = amount;
+    }
+    if (type == 'No') {
+      tokenAmounts[1] = amount;
+    }
+
+    let tradeTx = await mm.trade(tokenAmounts, 0, { gasLimit: 1000000 });
+    console.log({tradeTx: tradeTx.hash});
+    await tradeTx.wait();
+
+    return true;
+  } catch (err) {
+    // Uncomment for development
+    // console.error('Transaction sending error occured');
+    // console.error(err);
+
+    return false;
+  }
+}
 
 export default {
   getWallet,
@@ -142,4 +185,5 @@ export default {
   listenOnPriceChanges,
   getCurrentPrices,
   getBalances,
+  trade,
 };

@@ -37,6 +37,8 @@ import * as shape from 'd3-shape';
 
 export default function MarketScreen({navigation}) {
   const tabs = ['Yes', 'No'];
+  const address = navigation.getParam('address');
+  const outcome = navigation.getParam('outcome');
 
   const [chartData, setChartData] = useState({
     Yes: {
@@ -83,10 +85,10 @@ export default function MarketScreen({navigation}) {
   async function confirmAction() {
     // Add args
     setActionInProgress(true);
-    await Blockchain.trade();
+    let tradedSuccessfully = await Blockchain.trade(address, tabs[selectedTab], action);
     setActionInProgress(false);
     setDialogStatus({visible: false});
-    Alert.alert('Transaction sent');
+    Alert.alert(tradedSuccessfully ? 'Transaction sent' : 'Error occured :(');
   }
 
   function calcChartData(prices) {
@@ -137,9 +139,6 @@ export default function MarketScreen({navigation}) {
     updateBalancesAndPrices();
   }, []); // It is important to pass [] as a second argument
 
-  let address = navigation.getParam('address');
-  let outcome = navigation.getParam('outcome');
-
   return (
     <View>
       <View>
@@ -149,7 +148,7 @@ export default function MarketScreen({navigation}) {
           />
           <Appbar.Content
             title={outcome}
-            subtitle={address}
+            subtitle="Do you think the goal will be achieved?"
           />
         </Appbar.Header>
       </View>
@@ -275,10 +274,14 @@ export default function MarketScreen({navigation}) {
                 <Paragraph>You are going to {action} 1 {tabs[selectedTab]} token</Paragraph> 
               }
             </Dialog.Content>
-            <Dialog.Actions>
-              <Button mode="outlined" style={{margin: 5}} onPress={hideDialog}>Cancel</Button>
-              <Button mode="contained" style={{margin: 5}} onPress={confirmAction}>Confirm</Button>
-            </Dialog.Actions>
+            { actionInProgress ?
+              null
+              :
+              <Dialog.Actions>
+                <Button mode="outlined" style={{margin: 5}} onPress={hideDialog}>Cancel</Button>
+                <Button mode="contained" style={{margin: 5}} onPress={confirmAction}>Confirm</Button>
+              </Dialog.Actions>
+            }
           </Dialog>
         </Portal>
         

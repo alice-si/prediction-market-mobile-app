@@ -84,7 +84,7 @@ export default function HomeScreen() {
             <Card.Content>
               <Title>
                 <Text style={{fontSize: 30}}>
-                  {balance} {'\u00A0'}{/* Is it nbsp for react native */}
+                  {Number(balance).toFixed(3)} {'\u00A0'}{/* Is it nbsp for react native */}
                 </Text>
                 <Text style={{fontSize: 15, padding: 30, color: '#666561'}}>
                   tokens
