@@ -128,15 +128,23 @@ export default function MarketScreen({navigation}) {
     });
   }
 
-  useEffect(() => {
-    let prices = [];
-    Blockchain.listenOnPriceChanges(address, (newPriceChange) => {
-      prices.push(newPriceChange);
-      const newChartData = calcChartData(prices);
-      setChartData(newChartData);
-      updateBalancesAndPrices();
-    });
+  let prices = [];
+  function onPriceChange(newPriceChange) {
+    prices.push(newPriceChange);
+    const newChartData = calcChartData(prices);
+    setChartData(newChartData);
     updateBalancesAndPrices();
+  }
+
+  useEffect(() => {
+    Blockchain.listenOnPriceChanges(address, onPriceChange);
+    updateBalancesAndPrices();
+
+    return function cleanup() {
+      // We should find out how to disable contract event listeners
+      // the code below does not work
+      // onPriceChange = null; // hacky disabling the event listener from here https://github.com/ethers-io/ethers.js/issues/175
+    }
   }, []); // It is important to pass [] as a second argument
 
   return (

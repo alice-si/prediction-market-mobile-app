@@ -13,7 +13,17 @@ import {
   Alert,
 
 } from 'react-native';
-import { Avatar, Button, Card, Title, Paragraph, Snackbar } from 'react-native-paper';
+import {
+  Avatar,
+  Button,
+  Card,
+  Title,
+  Paragraph,
+  Snackbar,
+  Dialog,
+  Portal,
+  TextInput,
+} from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import Blockchain from '../modules/blockchain';
@@ -24,10 +34,16 @@ const NOTIFICATION_TIMEOUT = 1000;
 
 export default function HomeScreen() {
   const [balance, setBalance] = useState('');
+  const [ethersBalance, setEthersBalance] = useState('');
+  const [etherBalanceCheckerTimer, setEtherBalanceCheckerTimer] = useState(null);
   const [wallet, setWallet] = useState({});
   const [notificationState, setNotificationState] = useState({
     visible: false,
     msg: ''
+  });
+  const [dialogStatus, setDialogStatus] = useState({
+    visible: false
+    // visible: true,
   });
 
   useEffect(() => {
@@ -38,9 +54,27 @@ export default function HomeScreen() {
     Blockchain.getBalance().then(function(balance) {
       setBalance(balance);
     });
+
+    Blockchain.getEthersBalance().then(function(ethBalance) {
+      setEthersBalance(ethBalance);
+    });
+
+    // TODO disable listening on component unmounting
+    // https://reactjs.org/docs/hooks-effect.html#example-using-hooks-1
+    Blockchain.listenOnCollateralBalanceChanges(function(newBalance) {
+      setBalance(newBalance);
+    });
+
+    Blockchain.listenOnEthersBalanceChanges(function(newEthBalance) {
+      setEthersBalance(newEthBalance);
+    }).then(setEtherBalanceCheckerTimer);
+
+    return function cleanup() {
+      if (etherBalanceCheckerTimer) {
+        clearTimer(ethersBalanceCheckerTimer);
+      }
+    }
   }, []); // It is important to pass [], more info here https://css-tricks.com/run-useeffect-only-once/
-
-
 
   function showNotification(msg) {
     setNotificationState({
@@ -76,7 +110,7 @@ export default function HomeScreen() {
         style={styles.container}
         contentContainerStyle={styles.contentContainer}>
 
-        { balance !== '' ? null : <ActivityIndicator size="large" color="#17a6b0" /> }
+        { (balance !== '' && ethersBalance !== '') ? null : <ActivityIndicator size="large" color="#17a6b0" /> }
 
         <View style={styles.cardsContainer}>
           <Card style={styles.card}>
@@ -90,10 +124,22 @@ export default function HomeScreen() {
                   tokens
                 </Text>
               </Title>
+
+              <Title style={{marginTop: 10}}>
+                <Text style={{fontSize: 20}}>
+                  {Number(ethersBalance).toFixed(3)} {'\u00A0'}{/* Is it nbsp for react native */}
+                </Text>
+                <Text style={{fontSize: 12, padding: 30, color: '#666561'}}>
+                  eth
+                </Text>
+                {/* <Text style={{fontSize: 8, color: '#666561'}}>
+                   {'\u00A0'} {'<- to pay transaction fees'}
+                </Text> */}
+              </Title>
             </Card.Content>
-            <Card.Actions>
+            {/* <Card.Actions>
               <Button >Get more</Button>
-            </Card.Actions>
+            </Card.Actions> */}
           </Card>
 
           <Card style={styles.card}>
@@ -107,7 +153,34 @@ export default function HomeScreen() {
           </Card>
         </View>
 
-        <View style={styles.notificationContainer}>
+        <Portal>
+          <Dialog
+             style={{justifyContent: 'flex-end'}}
+             visible={dialogStatus.visible}
+             onDismiss={null}>
+            <Dialog.Title>Write a secret code to top up your balance and get started</Dialog.Title>
+            <Dialog.Content>
+              { false ?
+                <View>
+                  <Text style={{textAlign: 'center'}}>Sending transaction</Text>
+                  <ActivityIndicator size="large" style={{marginTop: 15}} color="#17a6b0" />
+                </View>
+                :
+                <TextInput
+                  mode='outlined'
+                  label='Secret code'
+                  value={'ccode'}
+                  onChangeText={console.log}
+                />
+                // <Paragraph>You are going to {action} 1 {tabs[selectedTab]} token</Paragraph> 
+              }
+
+              <Button mode="contained" style={{marginBottom: '60%', marginTop: 20}} contentStyle={{height: 50}} onPress={console.log}>Confirm</Button>
+            </Dialog.Content>
+          </Dialog>
+        </Portal>
+
+        {/* <View style={styles.notificationContainer}>
           <Snackbar
             duration={3}
             visible={notificationState.visible}
@@ -115,7 +188,7 @@ export default function HomeScreen() {
           >
             {'notificationState.msg'}
           </Snackbar>
-        </View>
+        </View> */}
 
       </ScrollView>
     </View>

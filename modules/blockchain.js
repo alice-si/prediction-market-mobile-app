@@ -12,12 +12,12 @@ import CONDITIONAL_TOKENS_JSON from '../contracts/ConditionalTokens.json';
 const LOCAL_GANACHE_HTTP = 'http://192.168.0.31:8545';
 // FIXME: set your deployed signalling orchestrator address
 const SIGNALLING_ORCHESTRATOR = '0x9699b0b659FBbFf0FC15cE01F98E76dee5880550';
+// FIXME: set it for rinkeby to the deployment block
+const START_BLOCK = 0;
 
 const ONE = ethers.utils.parseEther("1");
 const MIN_ONE = ethers.utils.parseEther("-1");
 const HUNDRED = ethers.utils.parseEther("100");
-
-let contracts = null;
 
 function getProvider() {
   // return new ethers.providers.JsonRpcProvider('http://2dac0d50.ngrok.io');
@@ -43,8 +43,9 @@ async function getWallet() {
   return new ethers.Wallet(privateKey, provider);
 }
 
-async function initContracts() {
-  contracts = {};
+async function getContracts() {
+  let contracts = {};
+
   let wallet = await getWallet();
   contracts.orchestrator = new ethers.Contract(SIGNALLING_ORCHESTRATOR, ORCHESTRATOR_JSON.abi, wallet);
   
@@ -53,12 +54,7 @@ async function initContracts() {
 
   let conditionalTokensAddress = await contracts.orchestrator.conditionalTokens();
   contracts.conditionalTokens = new ethers.Contract(conditionalTokensAddress, CONDITIONAL_TOKENS_JSON.abi, wallet);
-}
 
-async function getContracts() {
-  if (!contracts) {
-    await initContracts();
-  }
   return contracts;
 }
 
@@ -67,6 +63,12 @@ async function getBalance() {
   let address = await wallet.getAddress();
   let contracts = await getContracts();
   let balance = await contracts.collateral.balanceOf(address);
+  return ethers.utils.formatEther(balance);
+}
+
+async function getEthersBalance() {
+  let wallet = await getWallet();
+  let balance = await wallet.getBalance();
   return ethers.utils.formatEther(balance);
 }
 
@@ -88,13 +90,38 @@ async function getMarkets() {
   return markets;
 }
 
+async function listenOnCollateralBalanceChanges(onBalanceChange) {
+  let wallet = await getWallet();
+  let { collateral } = await getContracts();
+  let filter = collateral.filters.Transfer();
+
+  collateral.on(filter, async (from, to) => {
+    if (addressesAreEqual(from, wallet.address) || addressesAreEqual(to, wallet.address)) {
+      let newBalance = await collateral.balanceOf(wallet.address);
+      onBalanceChange(ethers.utils.formatEther(newBalance));
+    }
+  });
+}
+
+async function listenOnEthersBalanceChanges(onBalanceChange) {
+  let curBalance = await getEthersBalance();
+  let timer = setInterval(async () => {
+    let newBalance = await getEthersBalance();
+    if (newBalance !== curBalance) {
+      onBalanceChange(newBalance);
+    }
+    curBalance = newBalance;
+  }, 5000);
+  return timer;
+}
+
 async function listenOnPriceChanges(mmAddress, onPriceChangedCallback) {
-    function convertPriceToNumber(price) {
+  function convertPriceToNumber(price) {
     return Number.parseFloat(ethers.utils.formatEther(price)).toPrecision(3);
   }
 
   let wallet = await getWallet();
-  wallet.provider.resetEventsBlock(0); // <- it allows to get all events
+  wallet.provider.resetEventsBlock(START_BLOCK); // <- it allows to get all events
   let mm = new ethers.Contract(mmAddress, MM_JSON.abi, wallet.provider);
   let filter = mm.filters.AMMPriceChanged();
   
@@ -178,10 +205,17 @@ async function trade(mmAddress, type, action) {
   }
 }
 
+function addressesAreEqual(addr1, addr2) {
+  return addr1 && addr2 && (addr1.toUpperCase() == addr2.toUpperCase());
+}
+
 export default {
   getWallet,
   getBalance,
+  getEthersBalance,
   getMarkets,
+  listenOnCollateralBalanceChanges,
+  listenOnEthersBalanceChanges,
   listenOnPriceChanges,
   getCurrentPrices,
   getBalances,

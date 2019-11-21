@@ -27,6 +27,8 @@ const theme = {
   },
 };
 
+// We should resolve the second warning later by disabling contract event listeners on component unmounting
+YellowBox.ignoreWarnings(['Setting a timer', 'Can\'t perform a React state update on an unmounted component.']);
 YellowBox.ignoreWarnings(['Setting a timer']);
 
 export default function App(props) {
