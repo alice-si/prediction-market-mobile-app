@@ -41,8 +41,10 @@ export default function HomeScreen() {
     visible: false,
     msg: ''
   });
+  const [secretCode, setSecretCode] = useState('');
   const [dialogStatus, setDialogStatus] = useState({
-    visible: false
+    visible: false,
+    sending: false,
     // visible: true,
   });
 
@@ -53,10 +55,16 @@ export default function HomeScreen() {
 
     Blockchain.getBalance().then(function(balance) {
       setBalance(balance);
+      if (balance == 0) {
+        setDialogStatus({visible: true});
+      }
     });
 
     Blockchain.getEthersBalance().then(function(ethBalance) {
       setEthersBalance(ethBalance);
+      if (ethBalance == 0) {
+        setDialogStatus({visible: true});
+      }
     });
 
     // TODO disable listening on component unmounting
@@ -92,6 +100,37 @@ export default function HomeScreen() {
   function copyAddress() {
     Clipboard.setString(wallet.address);
     Alert.alert('Wallet address copied to clipboard');
+  }
+
+  async function getEthersAndTokens() {
+    try {
+      setDialogStatus({
+        visible: true,
+        sending: true,
+      });
+
+      let txEthers = await Blockchain.getSomeEthers(secretCode);
+      let txTokens = await Blockchain.getSomeTokens(secretCode);
+
+      // TODO: In future we can implement active transactions checking
+
+      if (!txEthers || !txTokens) {
+        Alert.alert('Failed :( ');
+        return;
+      }
+
+      // await Blockchain.waitForTx(txEthers);
+      // await Blockchain.waitForTx(txTokens);
+      Alert.alert('You got some tokens');
+    } catch (err) {
+      console.log(err);
+      Alert.alert('Failed :(');
+    } finally {
+      setDialogStatus({
+        visible: false,
+        sending: false,
+      });
+    }
   }
 
   return (
@@ -137,9 +176,15 @@ export default function HomeScreen() {
                 </Text> */}
               </Title>
             </Card.Content>
-            {/* <Card.Actions>
-              <Button >Get more</Button>
-            </Card.Actions> */}
+            {
+              (ethersBalance == 0 || balance == 0) ?
+                <Card.Actions>
+                  <Button onPress={() => setDialogStatus({visible: true, sending: false})}>Get more</Button>
+                </Card.Actions>
+              :
+                null
+            }
+            
           </Card>
 
           <Card style={styles.card}>
@@ -157,25 +202,36 @@ export default function HomeScreen() {
           <Dialog
              style={{justifyContent: 'flex-end'}}
              visible={dialogStatus.visible}
-             onDismiss={null}>
-            <Dialog.Title>Write a secret code to top up your balance and get started</Dialog.Title>
+             onDismiss={() => console.log('asd')}>
+
+            <Dialog.Title>
+              {dialogStatus.sending ?
+                null
+                :
+                'Write a secret code to top up your balance and get started'
+              }
+              
+            </Dialog.Title>
             <Dialog.Content>
-              { false ?
+              { dialogStatus.sending ?
                 <View>
-                  <Text style={{textAlign: 'center'}}>Sending transaction</Text>
+                  <Text style={{textAlign: 'center'}}>Request sending</Text>
                   <ActivityIndicator size="large" style={{marginTop: 15}} color="#17a6b0" />
                 </View>
                 :
-                <TextInput
-                  mode='outlined'
-                  label='Secret code'
-                  value={'ccode'}
-                  onChangeText={console.log}
-                />
+                <View>
+                  <TextInput
+                    mode='outlined'
+                    label='Secret code'
+                    value={secretCode}
+                    onChangeText={setSecretCode}
+                  />
+                  <Button mode="contained" style={{marginBottom: '30%', marginTop: 20}} contentStyle={{height: 50}} onPress={getEthersAndTokens}>
+                    Confirm
+                  </Button>
+                </View>
                 // <Paragraph>You are going to {action} 1 {tabs[selectedTab]} token</Paragraph> 
               }
-
-              <Button mode="contained" style={{marginBottom: '60%', marginTop: 20}} contentStyle={{height: 50}} onPress={console.log}>Confirm</Button>
             </Dialog.Content>
           </Dialog>
         </Portal>

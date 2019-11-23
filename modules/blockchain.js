@@ -12,8 +12,12 @@ import CONDITIONAL_TOKENS_JSON from '../contracts/ConditionalTokens.json';
 const LOCAL_GANACHE_HTTP = 'http://192.168.0.31:8545';
 // FIXME: set your deployed signalling orchestrator address
 const SIGNALLING_ORCHESTRATOR = '0x9699b0b659FBbFf0FC15cE01F98E76dee5880550';
+// FIXME: set your local faucet url
+const FAUCET_URL = 'http://192.168.0.31:3000';
 // FIXME: set it for rinkeby to the deployment block
 const START_BLOCK = 0;
+
+const TX_CHECK_INTERVAL = 300; // ms
 
 const ONE = ethers.utils.parseEther("1");
 const MIN_ONE = ethers.utils.parseEther("-1");
@@ -28,16 +32,29 @@ function getProvider() {
 
 function generatePrivateKey() {
   let randomWallet = ethers.Wallet.createRandom();
-  console.log(randomWallet.privateKey);
+  console.log('NEW RANDOM PRIVATE KEY:' + randomWallet.privateKey);
   return randomWallet.privateKey;
 }
 
+let privateKeyGenerationInProgress = false;
 async function getWallet() {
   let privateKey = await localStorage.getPrivateKey();
-  if (!privateKey) {
+  if (!privateKey && !privateKeyGenerationInProgress) {
+    privateKeyGenerationInProgress = true;
     privateKey = generatePrivateKey();
     await localStorage.savePrivateKey(privateKey);
   }
+
+  // active waiting till private key is generated
+  await new Promise((resolve) => {
+    let timer = setInterval(async () => {
+      privateKey = await localStorage.getPrivateKey();
+      if (privateKey) {
+        clearInterval(timer);
+        resolve();
+      }
+    }, 1000);
+  });
   
   const provider = getProvider();
   return new ethers.Wallet(privateKey, provider);
@@ -205,6 +222,69 @@ async function trade(mmAddress, type, action) {
   }
 }
 
+// Functions for faucet
+async function waitForTx(tx) {
+  await new Promise(async (resolve, reject) => {
+    if (!tx) {
+      reject();
+    }
+
+    let timer = setInterval(async () => {
+
+      let status;
+      try {
+        status = await fetch(`${FAUCET_URL}/api/getTxStatus/${tx}`);
+      } catch (err) {
+        console.log(err);
+        reject();
+      }
+      
+      if (status == 'completed') {
+        clearInterval(timer);
+        resolve();
+      }
+      if (status == 'failed') {
+        clearInterval(timer);
+        reject();
+      }
+    }, TX_CHECK_INTERVAL);
+  });
+}
+
+async function getSomeEthers(secretPhrase) {
+  let wallet = await getWallet();
+
+  try {
+    let response = await fetch(
+      `${FAUCET_URL}/api/giveMeEthers/${wallet.address}/${secretPhrase}`);
+    // console.log(tx);
+    // console.log(tx.json());
+    // return tx.json().hash;
+    return response.status == 200;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+  
+}
+
+async function getSomeTokens(secretPhrase) {
+  let wallet = await getWallet();
+
+  try {
+    let response = await fetch(
+      `${FAUCET_URL}/api/giveMeTokens/${wallet.address}/${secretPhrase}`);
+    // console.log(tx);
+    // console.log(tx.json());
+    // return tx.json().hash;
+    return response.status == 200;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+}
+
+
 function addressesAreEqual(addr1, addr2) {
   return addr1 && addr2 && (addr1.toUpperCase() == addr2.toUpperCase());
 }
@@ -220,4 +300,8 @@ export default {
   getCurrentPrices,
   getBalances,
   trade,
+
+  getSomeEthers,
+  getSomeTokens,
+  waitForTx,
 };
