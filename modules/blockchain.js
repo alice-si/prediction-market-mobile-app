@@ -24,10 +24,14 @@ const MIN_ONE = ethers.utils.parseEther("-1");
 const HUNDRED = ethers.utils.parseEther("100");
 
 function getProvider() {
+  // Localhost with ngrok
   // return new ethers.providers.JsonRpcProvider('http://2dac0d50.ngrok.io');
-  return new ethers.providers.JsonRpcProvider(LOCAL_GANACHE_HTTP);
 
-  // Connect Infura provider later
+  // Localhost
+  // return new ethers.providers.JsonRpcProvider(LOCAL_GANACHE_HTTP);
+
+  // Rinkeby
+  return ethers.getDefaultProvider('rinkeby');
 }
 
 function generatePrivateKey() {
