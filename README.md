@@ -42,6 +42,9 @@
 
 ### For development
 
+### To build the app
+https://docs.expo.io/versions/latest/distribution/building-standalone-apps/
+
 #### These icons were used
 https://expo.github.io/vector-icons/
 
