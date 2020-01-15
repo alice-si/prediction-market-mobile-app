@@ -6,6 +6,7 @@ import TabBarIcon from '../components/TabBarIcon';
 import HomeScreen from '../screens/HomeScreen';
 import MarketScreen from '../screens/MarketScreen';
 import MarketsScreen from '../screens/MarketsScreen';
+import WalletScreen from '../screens/WalletScreen';
 
 import Colors from '../constants/Colors';
 
@@ -38,6 +39,29 @@ HomeStack.navigationOptions = {
 
 HomeStack.path = '';
 
+const WalletStack = createStackNavigator(
+  {
+    Wallet: WalletScreen,
+  },
+  config
+);
+
+WalletStack.navigationOptions = {
+  tabBarLabel: 'Wallet',
+  tabBarIcon: ({ focused }) => (
+    <TabBarIcon
+      focused={focused}
+      name={
+        Platform.OS === 'ios'
+          ? `ios-wallet`
+          : 'md-wallet'
+      }
+    />
+  ),
+};
+
+WalletStack.path = '';
+
 const MarketsStack = createStackNavigator(
   {
     Markets: {
@@ -63,6 +87,7 @@ MarketsStack.navigationOptions = {
 
 const tabNavigator = createBottomTabNavigator({
   HomeStack,
+  WalletStack,
   MarketsStack,
 });
 

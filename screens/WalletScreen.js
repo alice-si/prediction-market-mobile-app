@@ -32,7 +32,7 @@ import { MonoText } from '../components/StyledText';
 
 const NOTIFICATION_TIMEOUT = 1000;
 
-export default function HomeScreen({navigation}) {
+export default function WalletScreen() {
   const [balance, setBalance] = useState('');
   const [ethersBalance, setEthersBalance] = useState('');
   const [etherBalanceCheckerTimer, setEtherBalanceCheckerTimer] = useState(null);
@@ -102,14 +102,6 @@ export default function HomeScreen({navigation}) {
     Alert.alert('Wallet address copied to clipboard');
   }
 
-  function checkBalanceButtonClicked() {
-    navigation.navigate('Wallet', {});
-  }
-
-  function selectProjectButtonClicked() {
-    navigation.navigate('Markets', {});
-  }
-
   async function getEthersAndTokens() {
     try {
       setDialogStatus({
@@ -146,25 +138,124 @@ export default function HomeScreen({navigation}) {
       <View style={styles.welcomeContainer}>
         {/* <DevelopmentModeNotice /> */}
 
-        <Image
+        {/* <Image
           source={require('../assets/images/alice-si.jpg')}
           style={styles.welcomeImage}
-        />
-
-        <Text style={{textAlign: 'center', padding: 10, fontWeight: '300'}}>
-          Use this app to make predictions on the outcome of charity projects run on alice
+        /> */}
+        <Text style={styles.header}>
+          Wallet
         </Text>
 
-        <Button onPress={() => checkBalanceButtonClicked()} mode="contained" style={{marginTop: 10}}>Go to my wallet</Button>
-
-        <Button onPress={() => selectProjectButtonClicked()} mode="outlined" style={{marginTop: 10}}>Select project</Button>
 
       </View>
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}>
+
+        { (balance !== '' && ethersBalance !== '') ? null : <ActivityIndicator size="large" color="#17a6b0" /> }
+
+        <View style={styles.cardsContainer}>
+          <Card style={styles.card}>
+            <Card.Title title="Balance" subtitle="" left={(props) => <Avatar.Icon {...props} icon="cash" />} />
+            <Card.Content>
+              <Title>
+                <Text style={{fontSize: 30}}>
+                  {Number(balance).toFixed(3)} {'\u00A0'}{/* Is it nbsp for react native */}
+                </Text>
+                <Text style={{fontSize: 15, padding: 30, color: '#666561'}}>
+                  tokens
+                </Text>
+              </Title>
+
+              <Title style={{marginTop: 10}}>
+                <Text style={{fontSize: 20}}>
+                  {Number(ethersBalance).toFixed(3)} {'\u00A0'}{/* Is it nbsp for react native */}
+                </Text>
+                <Text style={{fontSize: 12, padding: 30, color: '#666561'}}>
+                  eth
+                </Text>
+                {/* <Text style={{fontSize: 8, color: '#666561'}}>
+                   {'\u00A0'} {'<- to pay transaction fees'}
+                </Text> */}
+              </Title>
+            </Card.Content>
+            {
+              (ethersBalance == 0 || balance == 0) ?
+                <Card.Actions>
+                  <Button onPress={() => setDialogStatus({visible: true, sending: false})}>Get more</Button>
+                </Card.Actions>
+              :
+                null
+            }
+            
+          </Card>
+
+          <Card style={styles.card}>
+            <Card.Title title="Wallet" subtitle={wallet.address} left={(props) => <Avatar.Icon {...props} icon="wallet" />} />
+            <Card.Actions>
+              <Button onPress={() => copyAddress()}>
+                Copy address
+                <MaterialIcons name="content-copy" size={15} styles={{marginLeft: 10}} />
+              </Button>
+            </Card.Actions>
+          </Card>
+        </View>
+
+        <Portal>
+          <Dialog
+             style={{justifyContent: 'flex-end'}}
+             visible={dialogStatus.visible}
+             onDismiss={() => console.log('asd')}>
+
+            <Dialog.Title>
+              {dialogStatus.sending ?
+                null
+                :
+                'Write a secret code to top up your balance and get started'
+              }
+              
+            </Dialog.Title>
+            <Dialog.Content>
+              { dialogStatus.sending ?
+                <View>
+                  <Text style={{textAlign: 'center'}}>Request sending</Text>
+                  <ActivityIndicator size="large" style={{marginTop: 15}} color="#17a6b0" />
+                </View>
+                :
+                <View>
+                  <TextInput
+                    mode='outlined'
+                    label='Secret code'
+                    value={secretCode}
+                    onChangeText={setSecretCode}
+                  />
+                  <Button mode="contained" style={{marginBottom: '30%', marginTop: 20}} contentStyle={{height: 50}} onPress={getEthersAndTokens}>
+                    Confirm
+                  </Button>
+                </View>
+                // <Paragraph>You are going to {action} 1 {tabs[selectedTab]} token</Paragraph> 
+              }
+            </Dialog.Content>
+          </Dialog>
+        </Portal>
+
+        {/* <View style={styles.notificationContainer}>
+          <Snackbar
+            duration={3}
+            visible={notificationState.visible}
+            onDismiss={hideNotification}
+          >
+            {'notificationState.msg'}
+          </Snackbar>
+        </View> */}
+
+      </ScrollView>
     </View>
   );
 }
 
-HomeScreen.navigationOptions = {
+WalletScreen.navigationOptions = {
   header: null,
 };
 
@@ -201,6 +292,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  header: {
+    fontSize: 25,
+    fontWeight: '300',
+    textAlign: 'center',
+    // marginTop: 40,
+  },
   developmentModeText: {
     marginBottom: 20,
     color: 'rgba(0,0,0,0.4)',
@@ -209,12 +306,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   contentContainer: {
-    paddingTop: 30,
+    paddingTop: 5,
   },
   welcomeContainer: {
-    // alignItems: 'center',
-    // marginTop: 10,
-    // marginBottom: 20,
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 20,
   },
   welcomeImage: {
     height: 80,
@@ -223,12 +320,9 @@ const styles = StyleSheet.create({
     marginLeft: -10,
   },
   welcomeContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  homeScreenFilename: {
-    marginVertical: 7,
+    marginTop: 40,
+    alignItems: 'center',
+    marginHorizontal: 50,
   },
   welcomeText: {
     fontSize: 27,

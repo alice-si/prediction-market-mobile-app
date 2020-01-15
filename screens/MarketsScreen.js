@@ -39,6 +39,10 @@ function MarketsScreen({navigation}) {
         <Text style={styles.header}>
           Markets
         </Text>
+
+        <Text style={{padding: 10, paddingLeft: 30, paddingRight: 30, textAlign: 'center', fontWeight: '300',}}>
+          Choose a project to predict if it will succeed or fail
+        </Text>
       </View>
 
       <ScrollView style={styles.cardsScrollView}>
@@ -80,7 +84,7 @@ export default MarketsScreen;
 const styles = StyleSheet.create({
   header: {
     fontSize: 25,
-    fontWeight: '200',
+    fontWeight: '300',
     textAlign: 'center',
     marginTop: 40,
   },

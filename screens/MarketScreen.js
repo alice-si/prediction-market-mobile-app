@@ -156,8 +156,12 @@ export default function MarketScreen({navigation}) {
           />
           <Appbar.Content
             title={outcome}
-            subtitle="Do you think the goal will be achieved?"
-          />
+            subtitle="If you believe a project will be successful, buy 'Yes' tokens and/or sell 'No' tokens. Do the opposite if you think it will fail."
+            onPress={() => Alert.alert('If you believe a project will be successful, buy "Yes" tokens and/or sell "No" tokens. Do the opposite if you think it will fail.')}
+            // onScroll={() => Alert.alert('If you believe a project will be successful, buy "Yes" tokens and/or sell "No" tokens. Do the opposite if you think it will fail.')}
+          >
+          <Text>hehehehehehe</Text>
+          </Appbar.Content>
         </Appbar.Header>
       </View>
       <View>
